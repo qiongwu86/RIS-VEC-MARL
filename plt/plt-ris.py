@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import rcParams
 
+
 rcParams['font.family'] = 'Times New Roman'
 plt.rcParams.update({'font.size': 14})
 
@@ -41,5 +42,5 @@ ax2.grid(True)
 ax1.legend()
 ax2.legend()
 
-plt.savefig('D:\QKW\MARL-RIS-VEC\qkw-letter-final\MARL-RIS-VEC\RIS.pdf', dpi=300, format='pdf')
+plt.savefig('what.png')
 plt.show()

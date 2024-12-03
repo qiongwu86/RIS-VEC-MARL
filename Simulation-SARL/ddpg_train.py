@@ -1,6 +1,7 @@
 import math
 import os
-os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 import numpy as np
 import Environment
 from ddpg_torch import Agent
@@ -14,10 +15,10 @@ RIS_x, RIS_y, RIS_z = 220, 220, 25
 # BS coordination
 BS_x, BS_y, BS_z = 0, 0, 25
 
-up_lanes = [i/2.0 for i in [400+3.5/2, 400+3.5+3.5/2, 800+3.5/2, 800+3.5+3.5/2]]
-down_lanes = [i/2.0 for i in [400-3.5-3.5/2, 400-3.5/2, 800-3.5-3.5/2, 800-3.5/2]]
-left_lanes = [i/2.0 for i in [400+3.5/2, 400+3.5+3.5/2, 800+3.5/2, 800+3.5+3.5/2]]
-right_lanes = [i/2.0 for i in [400-3.5-3.5/2, 400-3.5/2, 800-3.5-3.5/2, 800-3.5/2]]
+up_lanes = [i/2.0 for i in [400 + 3.5/2, 400 + 3.5 + 3.5/2, 800 + 3.5/2, 800 + 3.5 + 3.5/2]]
+down_lanes = [i/2.0 for i in [400 - 3.5 - 3.5/2, 400 - 3.5/2, 800 - 3.5 - 3.5/2, 800 - 3.5/2]]
+left_lanes = [i/2.0 for i in [400 + 3.5/2, 400 + 3.5 + 3.5/2, 800 + 3.5/2, 800 + 3.5 + 3.5/2]]
+right_lanes = [i/2.0 for i in [400 - 3.5 - 3.5/2, 400 - 3.5/2, 800 - 3.5 - 3.5/2, 800 - 3.5/2]]
 
 print('------------- lanes are -------------')
 print('up_lanes :', up_lanes)
@@ -44,26 +45,28 @@ env.make_new_game()  # 添加车辆
 n_episode = 1000
 n_step_per_episode = 100
 theta_number = int(M/n_veh)
+
+
 def get_state(idx):
     """ Get state from the environment """
     list = []
-    theta = env.elements_phase_shift_real[idx*theta_number : idx*theta_number+theta_number]
+    theta = env.elements_phase_shift_real[idx*theta_number: idx*theta_number + theta_number]
 
-    #Data_arrive = env.data_r[idx] / 10
+    # Data_arrive = env.data_r[idx] / 10
 
-    Data_Buf = env.DataBuf[idx] / 10
+    Data_Buf = env.DataBuf[idx]/10
 
-    data_t = env.data_t[idx] / 10
+    data_t = env.data_t[idx]/10
 
-    data_p = env.data_p[idx] / 10
+    data_p = env.data_p[idx]/10
 
-    over_data = env.over_data[idx] / 10
+    over_data = env.over_data[idx]/10
 
-    rate = env.vehicle_rate[idx] / 20
+    rate = env.vehicle_rate[idx]/20
 
-    #position = env.vehicles[idx].position
+    # position = env.vehicles[idx].position
 
-    #list.append(Data_arrive)
+    # list.append(Data_arrive)
     list.append(Data_Buf)
     list.append(data_t)
     list.append(data_p)
@@ -72,8 +75,9 @@ def get_state(idx):
 
     return np.concatenate((np.reshape(theta, -1), np.reshape(list, -1)))
 
+
 n_input = len(get_state(0))
-n_output = 2 * n_veh + M
+n_output = 2*n_veh + M
 
 # ------- characteristics related to the network -------- #
 batch_size = 64
@@ -94,7 +98,7 @@ tau = 0.005
 
 # --------------------------------------------------------------
 agent = Agent(alpha, beta, n_input, tau, n_output, gamma, memory_size, C_fc1_dims, C_fc2_dims, C_fc3_dims,
-                  A_fc1_dims, A_fc2_dims, batch_size, n_veh)
+              A_fc1_dims, A_fc2_dims, batch_size, n_veh)
 
 ##Let's go
 if IS_TRAIN:
@@ -115,11 +119,11 @@ if IS_TRAIN:
         done = 0
         print("---------------------------------------------------------------------------")
         reward = np.zeros([n_step_per_episode], dtype=np.float16)
-        #env.DataBuf = np.random.randint(0, data_buf_size - 1) / 2.0 * np.ones(n_veh)
+        # env.DataBuf = np.random.randint(0, data_buf_size - 1) / 2.0 * np.ones(n_veh)
 
-        if i_episode % 100 == 0:
+        if i_episode%100 == 0:
             env.renew_positions()
-            #env.Random_phase()
+            # env.Random_phase()
             env.compute_parms()
             Vehicle_positions_x0.append(env.vehicles[0].position[0])
             Vehicle_positions_y0.append(env.vehicles[0].position[1])
@@ -129,7 +133,6 @@ if IS_TRAIN:
             Vehicle_positions_y2.append(env.vehicles[2].position[1])
             Vehicle_positions_x3.append(env.vehicles[3].position[0])
             Vehicle_positions_y3.append(env.vehicles[3].position[1])
-
 
         state_old_all = []
         for i in range(n_veh):
@@ -143,19 +146,19 @@ if IS_TRAIN:
         for i_step in range(n_step_per_episode):
             state_new_all = []
             action_all = []
-            action_all_training1 = np.zeros([2, n_veh], dtype=float) #power
+            action_all_training1 = np.zeros([2, n_veh], dtype=float)  # power
             action_all_training2 = np.zeros(M)
             # receive observation
             action = agent.choose_action(np.asarray(state_old_all).flatten())
 
             action = np.clip(action, -0.999, 0.999)
             action_all.append(action)
-            #All the agents take actions simultaneously
+            # All the agents take actions simultaneously
             for i in range(n_veh):
-                action_all_training1[0, i] = ((action[i]+1)/2)
-                action_all_training1[1, i] = ((action[n_veh+i]+1)/2)
+                action_all_training1[0, i] = ((action[i] + 1)/2)
+                action_all_training1[1, i] = ((action[n_veh + i] + 1)/2)
             for m in range(M):
-                action_all_training2[m] = ((action[2 * n_veh + m]+1)/2) * math.pi * 2
+                action_all_training2[m] = ((action[2*n_veh + m] + 1)/2)*math.pi*2
             action_power = action_all_training1.copy()
             action_phase = action_all_training2.copy()
 
@@ -166,7 +169,7 @@ if IS_TRAIN:
             Power_offload.append(np.sum(action_power[0]))
             Power_local.append(np.sum(action_power[1]))
 
-            #get new state
+            # get new state
             for i in range(n_veh):
                 state_new = get_state(i)
                 state_new_all.append(state_new)
@@ -176,7 +179,7 @@ if IS_TRAIN:
 
             # taking the agents actions, states and reward
             agent.remember(np.asarray(state_old_all).flatten(), np.asarray(action_all).flatten(),
-                            train_reward, np.asarray(state_new_all).flatten(), done)
+                           train_reward, np.asarray(state_new_all).flatten(), done)
 
             # agents take random samples and learn
             agent.learn()
@@ -198,7 +201,7 @@ if IS_TRAIN:
         print('Average local power:', Power_local_episode, '   Average offload power:',
               Power_offload_episode)
 
-        if (i_episode + 1) % 50 == 0 and i_episode != 0:
+        if (i_episode + 1)%50 == 0 and i_episode != 0:
             agent.save_models()
 
     # 记录数据，绘制奖励函数曲线
